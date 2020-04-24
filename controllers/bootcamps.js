@@ -8,7 +8,30 @@ const Bootcamp = require('../models/Bootcamp')
 // @route   GET /api/v1/bootcamps
 // @access  Public
 exports.getBootcamps = asyncHandler(async (req, res, next) => {
-  const bootcamps = await Bootcamp.find()
+  const reqQuery = { ...req.query }
+  // removing query fields for selecting specific properties 
+  // inside searched data or for sorting
+  const removeFields = ['select', 'sort']
+  removeFields.forEach(param => delete reqQuery[param])
+
+  // Adding '$' in front of gt|gte|etc. in order to match mongoose query API
+  const queryString = JSON.stringify(reqQuery).replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`)
+  let query = Bootcamp.find(JSON.parse(queryString))
+
+  // selecting only specifig fields
+  if (req.query.select) {
+    // Mongoose API asks for param passed to .select to be a string with
+    // space between values if multiple values exist
+    const fields = req.query.select.split(',').join(' ')
+    query = query.select(fields)
+  }
+
+  if (req.query.sort) {
+    const sortBy = req.query.sort.split(',').join(' ')
+    query = query.sort(sortBy)
+  }
+
+  const bootcamps = await query
   
   res.status(200).json({ success: true, data: bootcamps, count: bootcamps.length })
 })
