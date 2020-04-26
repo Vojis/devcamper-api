@@ -98,6 +98,9 @@ const BootcampSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
 })
 
 // Create bootcamp slug from name >> using mongoose middleware and slugify
@@ -124,6 +127,25 @@ BootcampSchema.pre('save', async function(next) {
   // Do not save address in DB
   this.address = undefined
   next()
+})
+
+// Cascade delete courses when a bootcamp is deleted
+BootcampSchema.pre('remove', async function(next) {
+  // Same as importing Course model and calling .deleteMany().
+  // Only deletes courses which are part of the removed bootcamp.
+  // On Course Schema, bootcamp is mongoose.Schema.ObjectId
+  await this.model('Course').deleteMany({ bootcamp: this._id })
+  next()
+})
+
+// Reverse populate with virtuals
+// Courses do not exist on Bootcamp Model
+// We add them virtually >> they will not be saved in the DB
+BootcampSchema.virtual('courses', {
+  ref: 'Course', // reference to the model we're using
+  localField: '_id',
+  foreignField: 'bootcamp',
+  justOne: false,
 })
 
 module.exports = mongoose.model('Bootcamp', BootcampSchema)
