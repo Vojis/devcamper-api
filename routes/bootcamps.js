@@ -9,7 +9,7 @@ const {
   bootcampPhotoUpload
 } = require('../controllers/bootcamps')
 
-const { protect } = require('../middleware/auth')
+const { protect, authorize } = require('../middleware/auth')
 
 const Bootcamp = require('../models/Bootcamp')
 const advancedResults = require('../middleware/advancedResults')
@@ -28,20 +28,20 @@ router
 
 router
   .route('/:id/photo')
-  .put(protect, bootcampPhotoUpload)
+  .put(protect, authorize('publisher', 'admin'), bootcampPhotoUpload)
 
 router
   .route('/')
   // first middleware is advancedResults, which changes res.advancedResults,
   // and calls next() middleware, which will be getBootcamps
   .get(advancedResults(Bootcamp, 'courses'), getBootcamps)
-  .post(protect, createBootcamp)
+  .post(protect, authorize('publisher', 'admin'), createBootcamp)
   
 router
   .route('/:id')
   .get(getBootcamp)
-  .put(protect, updateBootcamp)
-  .delete(protect, deleteBootcamp)
+  .put(protect, authorize('publisher', 'admin'), updateBootcamp)
+  .delete(protect, authorize('publisher', 'admin'), deleteBootcamp)
 
 module.exports = router
 
