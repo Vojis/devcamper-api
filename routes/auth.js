@@ -2,7 +2,9 @@ const express = require('express')
 const {
   register,
   login,
-  getMe
+  getMe,
+  forgotPassword,
+  resetPassword
 } = require('../controllers/auth')
 
 const { protect } = require('../middleware/auth')
@@ -20,5 +22,13 @@ router
 router
   .route('/me')
   .get(protect, getMe)
+
+router
+  .route('/forgotpassword')
+  .post(forgotPassword)
+
+router
+  .route('/resetpassword/:resettoken')
+  .post(resetPassword)
 
 module.exports = router
